@@ -1,0 +1,305 @@
+@import url('https://fonts.googleapis.com/css2?family=Bungee&display=swap');
+
+* { box-sizing: border-box; }
+html, body, #root { height: 100%; }
+body {
+  margin: 0;
+  padding: 0;
+  background: #151515;
+  color: #fff;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ========== Grid wrapper ========== */
+.three-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  height: 100vh;
+  width: 100%;
+}
+
+/* Each column background */
+.background-one,
+.background-two,
+.background-three {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Center the choice buttons */
+.link-container {
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  z-index: 3;
+}
+
+/* Reset base button look */
+button {
+  all: unset;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ========== Choice buttons ("bubbles") ========== */
+.bubbles {
+  --size-letter: 36px;
+  --btn-border: calc(var(--size-letter) / 6);
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.55em 1.15em;
+  font-size: var(--size-letter);
+  line-height: 1;
+  border-radius: 0.35rem;
+  border: var(--btn-border) solid currentColor;
+  background: transparent;
+  transition: transform 280ms cubic-bezier(0.83, 0, 0.17, 1);
+  user-select: none;
+}
+
+.bubbles > .text {
+  font-family: "Bungee", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  font-weight: 700;
+  font-size: 0.5em;
+  color: currentColor;
+  position: relative;
+  z-index: 5;
+  transition: color 420ms cubic-bezier(0.83, 0, 0.17, 1);
+  pointer-events: none;
+}
+
+.bubbles:active {
+  transform: scale(0.985);
+  filter: brightness(0.98);
+}
+
+.bubbles::before,
+.bubbles::after {
+  content: "";
+  position: absolute;
+  width: 150%;
+  aspect-ratio: 1/1;
+  border-radius: 50%;
+  background-color: currentColor;
+  transform: translate(-50%, -50%) scale(0);
+  transition: transform 900ms cubic-bezier(0.76, 0, 0.24, 1);
+  z-index: 2;
+  opacity: 0.95;
+}
+
+.bubbles::before { top: 0; left: 0; transform-origin: 10% 10%; }
+.bubbles::after  { top: 100%; left: 100%; transform-origin: 90% 90%; }
+
+.bubbles:hover > .text { color: #111; }
+.bubbles:hover::before,
+.bubbles:hover::after { transform: translate(-50%, -50%) scale(1); }
+
+.bubbles .dec-square {
+  position: absolute;
+  z-index: 4;
+  width: 4ch;
+  height: 4ch;
+  top: 50%;
+  right: 50%;
+  transform: translate(50%, -50%) rotate(0deg) scale(0);
+  transition: transform 800ms ease;
+  border-radius: 8%;
+  pointer-events: none;
+}
+.bubbles.link-two .dec-square { background-color: #f27b9b; }
+.bubbles.link-two:hover .dec-square { transform: translate(50%, -50%) rotate(135deg) scale(1); }
+
+.bubbles:focus-visible {
+  outline: 3px solid rgba(255,255,255,0.08);
+  outline-offset: 4px;
+}
+
+.link-one  { color: #53d9d1; }
+.link-two  { color: #f27b9b; }
+.link-three{ color: #eb7132; }
+
+/* ========== Background animations for columns ========== */
+.background-one::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  background-color: #53d9d1;
+  clip-path: circle(0% at 50% 50%);
+  transition: clip-path 1s cubic-bezier(0.65, 0, 0.35, 1);
+}
+.background-one:hover::before { clip-path: circle(120% at 50% 50%); }
+
+.background-one::after {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  background-color: #151515;
+  clip-path: polygon(40% 0%, 60% 0%, 60% 0%, 40% 0%, 40% 100%, 60% 100%, 60% 100%, 40% 100%);
+  transition: clip-path 1s cubic-bezier(0.65, 0, 0.35, 1);
+}
+.background-one:hover::after {
+  clip-path: polygon(40% 10%, 60% 10%, 60% 35%, 40% 35%, 40% 90%, 60% 90%, 60% 65%, 40% 65%);
+}
+
+.background-two::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  background-color: #f27b9b;
+  clip-path: polygon(0% -20%, 100% -30%, 100% -10%, 0% 0%, 0% 130%, 100% 120%, 100% 100%, 0% 110%);
+  transition: clip-path 1s cubic-bezier(0.25, 1, 0.5, 1);
+}
+.background-two:hover::before {
+  clip-path: polygon(0% 10%, 100% 0%, 100% 20%, 0% 30%, 0% 100%, 100% 90%, 100% 70%, 0% 80%);
+}
+
+.background-three::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  top: 0; left: 0;
+  width: 50%; height: 100%;
+  transform-origin: left center;
+  transform: translate(0, -50%) scaleY(0);
+  transition: transform 1s ease;
+  clip-path: polygon(20% 60%, 100% 60%, 100% 40%, 20% 40%, 20% 0%, 60% 0%, 60% 20%, 20% 20%);
+  background-color: #eb7132;
+}
+.background-three:hover::before {
+  transform: translate(0, 0%) scaleY(1);
+}
+
+.background-three::after {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  width: 50%; height: 100%;
+  bottom: 0; right: 0;
+  transform-origin: right center;
+  transform: translate(0, 50%) scaleY(0);
+  transition: transform 1s ease;
+  clip-path: polygon(80% 40%, 0% 40%, 0% 60%, 80% 60%, 80% 100%, 40% 100%, 40% 80%, 80% 80%);
+  background-color: #eb7132;
+}
+.background-three:hover::after {
+  transform: translate(0, 0%) scaleY(1);
+}
+
+/* ========== tags-stage layout ========== */
+.tags-stage {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 2.25rem;
+  height: 100vh;
+}
+
+.card {
+  width: 100%;
+  max-width: 980px;
+  background: rgba(255,255,255,0.02);
+  border-radius: 12px;
+  padding: 1.25rem;
+  border: 1px solid rgba(255,255,255,0.04);
+}
+
+/* ========== Neumorphic effect for tags container ========== */
+.tags-stage .card {
+  background: linear-gradient(145deg, #2e2d2d, #212121);
+  border-radius: 12px;
+  border: solid #404c5d 1px;
+  box-shadow: -1px -5px 15px #41465b,
+              5px 5px 15px #41465b,
+              inset 5px 5px 10px #212121,
+              inset -5px -5px 10px #212121;
+  transition: box-shadow 0.5s ease;
+}
+.tags-stage .card:hover {
+  box-shadow: 1px 1px 13px #20232e,
+              -1px -1px 13px #545b78;
+}
+
+.row { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
+.header { justify-content: space-between; align-items: center; }
+
+.title {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #fff;
+}
+
+.subtitle { margin-top: 8px; color: #9aa3ad; }
+
+.btn { all: unset; display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:8px; cursor:pointer; }
+.btn-ghost { border:1px solid rgba(255,255,255,0.06); color: #e6eef8; padding:6px 10px; }
+.btn-primary { background: linear-gradient(90deg,#53d9d1,#6fe3d8); color:#07131a; padding:8px 12px; border-radius:8px; }
+
+.tag { padding:8px 12px; border-radius:999px; border:1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.01); color:#e6eef8; font-weight:600; }
+.tag.selected { background: linear-gradient(90deg,#53d9d1,#6fe3d8); color:#07131a; border-color: transparent; }
+
+.muted { color: #96a0a8; }
+
+
+.btn-recommend {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  padding: 12px 28px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  background: linear-gradient(145deg, #292929, #1a1a1a);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.15);
+  box-shadow: 1px 1px 8px #20232e, -1px -1px 8px #545b78;
+  transition: 
+    box-shadow 0.3s cubic-bezier(.4,0,.2,1),
+    transform 0.3s cubic-bezier(.4,0,.2,1);
+  backdrop-filter: blur(5px);
+}
+
+.btn-recommend:hover {
+  transform: scale(1.06);
+  box-shadow: 0 4px 20px #292929aa, 0 1px 8px #53d9d144;
+}
+
+.btn-recommend:active {
+  transform: scale(0.98);
+  box-shadow: 0 2px 12px #333, 0 0 16px #292929aa;
+}
+
+.btn-recommend .shine {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transform: skew(-13deg) translateX(-100%);
+  transition: transform 1s cubic-bezier(.4,0,.2,1);
+}
+
+.btn-recommend:hover .shine {
+  transform: skew(-13deg) translateX(100%);
+}
+
+.btn-recommend .shine-bar {
+  width: 24px;
+  height: 100%;
+  background: rgba(255,255,255,0.15);
+  filter: blur(2px);
+  border-radius: 6px;
+}

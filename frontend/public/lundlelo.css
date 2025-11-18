@@ -1,0 +1,32 @@
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #151515;
+  color: #fff;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#heading {
+  text-align: center;
+  margin-top: 0.5em; /* optional spacing below the image */
+}
+
+/* Container to stack photo and heading vertically */
+.container {
+  padding-top: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* horizontally center both photo and heading */
+}
+
+/* Crop the photo to square and center its content */
+.photo {
+  width: 300px;      /* fixed width to define square size */
+  height: 300px;     /* equal height to make square */
+  object-fit: cover; /* crop and fill */
+  object-position: center; /* center the cropped part */
+  display: block;    /* removes inline spacing */
+  border-radius: 0;  /* optional: remove if you want sharp corners */
+}

@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    // Output & Module Settings
+    "target": "esnext",
+    "module": "nodenext",
+    "jsx": "react-jsx",
+    "moduleResolution": "node",
+
+    // JS/TS File Support
+    "allowJs": true,
+    "checkJs": false,
+
+    // Type Safety (Relaxed for Now)
+    "strict": true,
+    "noUncheckedIndexedAccess": false,
+    "exactOptionalPropertyTypes": false,
+
+    // Compatibility & Build Speed
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+
+    // Paths (optional if you want aliases later)
+    // "baseUrl": "./src",
+    // "paths": {
+    //   "@components/*": ["components/*"]
+    // }
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"]
+}

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recommender System API</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .api-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .endpoint {
+            margin: 15px 0;
+            padding: 10px;
+            background: white;
+            border-left: 4px solid #007bff;
+            border-radius: 3px;
+        }
+        .method {
+            font-weight: bold;
+            color: #007bff;
+        }
+        .url {
+            font-family: monospace;
+            background: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+        .description {
+            margin-top: 5px;
+            color: #666;
+        }
+        .example {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status.healthy {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎬📚🛍️ Recommender System API</h1>
+        
+        <div class="api-section">
+            <h2>System Status</h2>
+            <div id="status">
+                <span class="status" id="status-indicator">Loading...</span>
+                <span id="status-text">Checking system status...</span>
+            </div>
+        </div>
+
+        <div class="api-section">
+            <h2>Available Datasets</h2>
+            <div class="endpoint">
+                <div class="method">GET</div>
+                <div class="url">/api/datasets</div>
+                <div class="description">Get information about available datasets and their models</div>
+                <div class="example">curl http://localhost:5000/api/datasets</div>
+            </div>
+        </div>
+
+        <div class="api-section">
+            <h2>Recommendations</h2>
+            <div class="endpoint">
+                <div class="method">GET</div>
+                <div class="url">/api/recommend/{dataset}/{model}</div>
+                <div class="description">Get personalized recommendations for a user</div>
+                <div class="example">curl "http://localhost:5000/api/recommend/movies/svd?user_id=1&n=10"</div>
+            </div>
+            
+            <div class="endpoint">
+                <div class="method">GET</div>
+                <div class="url">/api/recommend-by-categories/{dataset}/{model}</div>
+                <div class="description">Get recommendations filtered by categories/genres</div>
+                <div class="example">curl "http://localhost:5000/api/recommend-by-categories/movies/svd?user_id=1&categories=Action&categories=Drama&n=5"</div>
+            </div>
+        </div>
+
+        <div class="api-section">
+            <h2>Rating Prediction</h2>
+            <div class="endpoint">
+                <div class="method">GET</div>
+                <div class="url">/api/predict/{dataset}/{model}</div>
+                <div class="description">Predict rating for a user-item pair</div>
+                <div class="example">curl "http://localhost:5000/api/predict/movies/svd?user_id=1&item_id=100"</div>
+            </div>
+        </div>
+
+        <div class="api-section">
+            <h2>Search & Browse</h2>
+            <div class="endpoint">
+                <div class="method">GET</div>
+                <div class="url">/api/search/{dataset}</div>
+                <div class="description">Search for items in a dataset</div>
+                <div class="example">curl "http://localhost:5000/api/search/movies?q=star&limit=10"</div>
+            </div>
+            
+            <div class="endpoint">
+                <div class="method">GET</div>
+                <div class="url">/api/categories/{dataset}</div>
+                <div class="description">Get available categories/genres for a dataset</div>
+                <div class="example">curl http://localhost:5000/api/categories/movies</div>
+            </div>
+        </div>
+
+        <div class="api-section">
+            <h2>Model Information</h2>
+            <div class="endpoint">
+                <div class="method">GET</div>
+                <div class="url">/api/model-info/{dataset}/{model}</div>
+                <div class="description">Get detailed information about a specific model</div>
+                <div class="example">curl http://localhost:5000/api/model-info/movies/svd</div>
+            </div>
+        </div>
+
+        <div class="api-section">
+            <h2>Frontend Integration</h2>
+            <p>This API is designed to work with the React frontend. The frontend can:</p>
+            <ul>
+                <li>Select categories (Movies, Books, Products)</li>
+                <li>Choose specific genres/tags</li>
+                <li>Get personalized recommendations</li>
+                <li>Search for specific items</li>
+                <li>View item details and predicted ratings</li>
+            </ul>
+            <p><strong>Frontend URL:</strong> <a href="http://localhost:3000" target="_blank">http://localhost:3000</a></p>
+        </div>
+    </div>
+
+    <script>
+        // Check API status
+        fetch('/api/health')
+            .then(response => response.json())
+            .then(data => {
+                const statusIndicator = document.getElementById('status-indicator');
+                const statusText = document.getElementById('status-text');
+                
+                if (data.status === 'healthy') {
+                    statusIndicator.className = 'status healthy';
+                    statusIndicator.textContent = 'HEALTHY';
+                    statusText.textContent = `Loaded datasets: ${data.loaded_datasets.join(', ')}`;
+                } else {
+                    statusIndicator.className = 'status error';
+                    statusIndicator.textContent = 'ERROR';
+                    statusText.textContent = 'System not ready';
+                }
+            })
+            .catch(error => {
+                const statusIndicator = document.getElementById('status-indicator');
+                const statusText = document.getElementById('status-text');
+                statusIndicator.className = 'status error';
+                statusIndicator.textContent = 'ERROR';
+                statusText.textContent = 'Cannot connect to API';
+            });
+    </script>
+</body>
+</html>
+
