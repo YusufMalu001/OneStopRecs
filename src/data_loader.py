@@ -106,132 +106,105 @@ class DataLoader:
         print(f"GoodBooks dataset loaded (subset): {len(ratings)} ratings, {len(books)} books")
         return ratings, books, book_tags
     
-    def create_sample_amazon_data(self) -> Tuple[pd.DataFrame, pd.DataFrame]:
-        """Create sample Amazon-style data for demonstration"""
-        print("Creating sample Amazon Reviews dataset...")
+    # inside DataLoader class
 
-        # Generate synthetic Amazon-style data (reduced size for speed)
-        np.random.seed(42)
-        n_users = 5000
-        n_products = 2000
-        n_ratings = 20000
-        
-        # Generate user and product IDs
-        user_ids = np.random.randint(1, n_users + 1, n_ratings)
-        product_ids = np.random.randint(1, n_products + 1, n_ratings)
-        
-        # Generate ratings (1-5 scale)
-        ratings = np.random.choice([1, 2, 3, 4, 5], n_ratings, p=[0.1, 0.1, 0.2, 0.3, 0.3])
-        
-        # Generate timestamps
-        timestamps = pd.date_range('2018-01-01', '2018-12-31', periods=n_ratings)
-        
-        # Create ratings dataframe
-        ratings_df = pd.DataFrame({
-            'user_id': user_ids,
-            'product_id': product_ids,
-            'rating': ratings,
-            'timestamp': timestamps
-        })
-        
-        # Create products dataframe
-        products_df = pd.DataFrame({
-            'product_id': range(1, n_products + 1),
-            'title': [f'Product {i}' for i in range(1, n_products + 1)],
-            'category': np.random.choice(['Electronics', 'Books', 'Clothing', 'Home', 'Sports'], n_products)
-        })
-        
-        print(f"Sample Amazon dataset created: {len(ratings_df)} ratings, {len(products_df)} products")
-        return ratings_df, products_df
+SNAP_CATEGORY_KEYS = {
+    "Electronics": "Electronics",
+    "Home and Kitchen": "Home_and_Kitchen",
+    "Beauty": "Beauty",
+    "Sports and Outdoors": "Sports_and_Outdoors",
+    "Toys and Games": "Toys_and_Games",
+    "Automotive": "Automotive",
+    "Musical Instruments": "Musical_Instruments",
+}
+
+def _safe_download(self, url: str, dest: str, timeout: int = 30):
+    """Stream-download file robustly."""
+    if os.path.exists(dest):
+        return dest
+    resp = requests.get(url, stream=True, timeout=timeout)
+    resp.raise_for_status()
+    with open(dest, "wb") as f:
+        for chunk in resp.iter_content(chunk_size=1024 * 32):
+            if chunk:
+                f.write(chunk)
+    return dest
+
+def load_amazon_category(self, snap_key: str, limit: int = None):
+    """
+    Download & load one SNAP category split. Returns (reviews_df, meta_df).
+    snap_key: e.g. "Electronics" or "Home_and_Kitchen" (use SNAP_CATEGORY_KEYS to map).
+    """
+    base_reviews = f"https://jmcauley.ucsd.edu/data/amazon_v2/categoryFiles/{snap_key}_5.json.gz"
+    base_meta = f"https://jmcauley.ucsd.edu/data/amazon_v2/metaFiles/meta_{snap_key}.json.gz"
+
+    reviews_path = os.path.join(self.data_dir, f"{snap_key}_reviews.json.gz")
+    meta_path = os.path.join(self.data_dir, f"{snap_key}_meta.json.gz")
+
+    # download safely
+    self._safe_download(base_reviews, reviews_path)
+    self._safe_download(base_meta, meta_path)
+
+    # load reviews (JSON lines)
+    reviews = pd.read_json(reviews_path, lines=True)
+    # select and rename fields to match your pipeline
+    keep_cols = [c for c in ["reviewerID", "asin", "overall", "unixReviewTime"] if c in reviews.columns]
+    reviews = reviews[keep_cols].rename(columns={
+        "reviewerID": "user_id",
+        "asin": "item_id",
+        "overall": "rating",
+        "unixReviewTime": "timestamp"
+    })
+    if "timestamp" in reviews.columns:
+        reviews["timestamp"] = pd.to_datetime(reviews["timestamp"], unit="s", errors="coerce")
+
+    if limit:
+        reviews = reviews.head(limit)
+
+    # load metadata
+    meta = pd.read_json(meta_path, lines=True)
+    # keep common fields if present
+    meta_keep = [c for c in ["asin", "title", "brand", "categories"] if c in meta.columns]
+    meta = meta[meta_keep].rename(columns={"asin": "item_id"})
+    # tag top-level category (the label you want)
+    meta["top_category"] = snap_key
+
+    # ensure types are str for item ids
+    meta["item_id"] = meta["item_id"].astype(str)
+    reviews["item_id"] = reviews["item_id"].astype(str)
+    reviews["user_id"] = reviews["user_id"].astype(str)
+
+    return reviews, meta
+
+def load_amazon_categories(self, categories: list = None, per_cat_limit: int = None):
+    """
+    Load multiple SNAP categories (your requested list). Returns concatenated (reviews, products).
+    categories: friendly names like "Electronics", "Home and Kitchen", etc.
+    per_cat_limit: optional limit applied per category for faster experiments.
+    """
+    if categories is None:
+        categories = list(SNAP_CATEGORY_KEYS.keys())
+
+    reviews_list = []
+    meta_list = []
+    for friendly in categories:
+        if friendly not in SNAP_CATEGORY_KEYS:
+            raise ValueError(f"Unknown category {friendly}. Valid keys: {list(SNAP_CATEGORY_KEYS.keys())}")
+        snap_key = SNAP_CATEGORY_KEYS[friendly]
+        print(f"Loading SNAP category: {friendly} -> {snap_key}")
+        r, m = self.load_amazon_category(snap_key, limit=per_cat_limit)
+        # attach a clean category label (friendly)
+        m["category_label"] = friendly
+        r["category_label"] = friendly
+        reviews_list.append(r)
+        meta_list.append(m)
+
+    all_reviews = pd.concat(reviews_list, ignore_index=True)
+    all_meta = pd.concat(meta_list, ignore_index=True).drop_duplicates(subset=["item_id"])
+    print(f"Combined dataset: {len(all_reviews)} ratings, {len(all_meta)} products across {len(categories)} categories")
+    return all_reviews, all_meta
+
     
-    def preprocess_data(self, ratings: pd.DataFrame, items: pd.DataFrame = None) -> Dict[str, Any]:
-        """Preprocess the data for recommendation models"""
-        
-        # Remove duplicate ratings (keep the latest)
-        if 'timestamp' in ratings.columns:
-            ratings = ratings.sort_values('timestamp').drop_duplicates(['user_id', 'item_id'], keep='last')
-        
-        # Filter users and items with minimum interactions
-        min_user_ratings = 5
-        min_item_ratings = 5
-        
-        # Count ratings per user and item
-        user_counts = ratings['user_id'].value_counts()
-        item_counts = ratings['item_id'].value_counts()
-        
-        # Filter users and items
-        valid_users = user_counts[user_counts >= min_user_ratings].index
-        valid_items = item_counts[item_counts >= min_item_ratings].index
-        
-        ratings_filtered = ratings[
-            (ratings['user_id'].isin(valid_users)) & 
-            (ratings['item_id'].isin(valid_items))
-        ].copy()
-        
-        # Create user and item mappings
-        unique_users = ratings_filtered['user_id'].unique()
-        unique_items = ratings_filtered['item_id'].unique()
-        
-        user_to_idx = {user: idx for idx, user in enumerate(unique_users)}
-        item_to_idx = {item: idx for idx, item in enumerate(unique_items)}
-        
-        # Map to indices
-        ratings_filtered['user_idx'] = ratings_filtered['user_id'].map(user_to_idx)
-        ratings_filtered['item_idx'] = ratings_filtered['item_id'].map(item_to_idx)
-
-        # Create reverse mappings
-        idx_to_user = {idx: user for user, idx in user_to_idx.items()}
-        idx_to_item = {idx: item for item, idx in item_to_idx.items()}
-
-        print(f"Data preprocessed: {len(ratings_filtered)} ratings, {len(unique_users)} users, {len(unique_items)} items")
-
-        return {
-            'ratings': ratings_filtered,
-            'user_to_idx': user_to_idx,
-            'item_to_idx': item_to_idx,
-            'idx_to_user': idx_to_user,
-            'idx_to_item': idx_to_item,
-            'n_users': len(unique_users),
-            'n_items': len(unique_items),
-            'items': items
-        }
-    
-    def train_test_split(self, ratings: pd.DataFrame, test_size: float = 0.2, random_state: int = 42) -> Tuple[pd.DataFrame, pd.DataFrame]:
-        """Split data into train and test sets"""
-        from sklearn.model_selection import train_test_split
-        
-        # Sort by timestamp if available, otherwise random
-        if 'timestamp' in ratings.columns:
-            ratings_sorted = ratings.sort_values('timestamp')
-        else:
-            ratings_sorted = ratings.sample(frac=1, random_state=random_state)
-        
-        train_data, test_data = train_test_split(
-            ratings_sorted, 
-            test_size=test_size, 
-            random_state=random_state,
-            stratify=ratings_sorted['rating'] if len(ratings_sorted['rating'].unique()) > 1 else None
-        )
-        
-        print(f"Data split: {len(train_data)} train samples, {len(test_data)} test samples")
-        return train_data, test_data
-    
-    def get_dataset_stats(self, data: Dict[str, Any]) -> Dict[str, Any]:
-        """Get statistics about the dataset"""
-        ratings = data['ratings']
-        
-        stats = {
-            'n_ratings': len(ratings),
-            'n_users': data['n_users'],
-            'n_items': data['n_items'],
-            'sparsity': 1 - (len(ratings) / (data['n_users'] * data['n_items'])),
-            'avg_rating': ratings['rating'].mean(),
-            'rating_distribution': ratings['rating'].value_counts().to_dict(),
-            'ratings_per_user': ratings.groupby('user_id').size().describe().to_dict(),
-            'ratings_per_item': ratings.groupby('item_id').size().describe().to_dict()
-        }
-        
-        return stats
 
 def main():
     """Main function to demonstrate data loading"""
@@ -240,9 +213,14 @@ def main():
     print("=== Loading MovieLens Dataset ===")
     ml_ratings, ml_movies, ml_tags = loader.load_movielens()
     
-    # Rename columns for consistency
-    ml_ratings = ml_ratings.rename(columns={'movieId': 'item_id'})
+    ml_ratings = ml_ratings.rename(columns={'movieId': 'item_id', 'userId': 'user_id'})
     ml_movies = ml_movies.rename(columns={'movieId': 'item_id'})
+
+    # Ensure types
+    if 'user_id' in ml_ratings.columns:
+        ml_ratings['user_id'] = ml_ratings['user_id'].astype(str)
+    ml_ratings['item_id'] = ml_ratings['item_id'].astype(str)
+    ml_movies['item_id'] = ml_movies['item_id'].astype(str)
     
     # Preprocess MovieLens data
     ml_data = loader.preprocess_data(ml_ratings, ml_movies)
@@ -253,21 +231,50 @@ def main():
     gb_ratings, gb_books, gb_tags = loader.load_goodbooks()
     
     # Rename columns for consistency
-    gb_ratings = gb_ratings.rename(columns={'book_id': 'item_id'})
+    gb_ratings = gb_ratings.rename(columns={'book_id': 'item_id', 'user_id': 'user_id'})
     gb_books = gb_books.rename(columns={'book_id': 'item_id'})
+
+    # Ensure types
+    if 'user_id' in gb_ratings.columns:
+        gb_ratings['user_id'] = gb_ratings['user_id'].astype(str)
+    gb_ratings['item_id'] = gb_ratings['item_id'].astype(str)
+    gb_books['item_id'] = gb_books['item_id'].astype(str)
     
     # Preprocess GoodBooks data
     gb_data = loader.preprocess_data(gb_ratings, gb_books)
     gb_stats = loader.get_dataset_stats(gb_data)
     print("GoodBooks Stats:", gb_stats)
     
-    print("\n=== Creating Sample Amazon Dataset ===")
-    amazon_ratings, amazon_products = loader.create_sample_amazon_data()
-    
-    # Rename columns for consistency
-    amazon_ratings = amazon_ratings.rename(columns={'product_id': 'item_id'})
-    amazon_products = amazon_products.rename(columns={'product_id': 'item_id'})
-    
+    print("\n=== Loading Amazon SNAP Categories ===")
+    chosen = [
+        "Electronics",
+        "Home and Kitchen",
+        "Beauty",
+        "Sports and Outdoors",
+        "Toys and Games",
+        "Automotive",
+        "Musical Instruments",
+    ]
+
+    # per_cat_limit controls how many reviews to load per category (None => full)
+    # set a limit for faster iteration if you like (e.g., 100000). Use None to load everything.
+    amazon_ratings, amazon_products = loader.load_amazon_categories(categories=chosen, per_cat_limit=100000)
+
+    # Ensure consistent column names/types for the pipeline
+    # load_amazon_categories should already set 'user_id' and 'item_id', but normalize just in case
+    amazon_ratings = amazon_ratings.rename(columns={'reviewerID': 'user_id', 'asin': 'item_id', 'overall': 'rating'})
+    amazon_products = amazon_products.rename(columns={'asin': 'item_id'})
+
+    amazon_ratings['user_id'] = amazon_ratings['user_id'].astype(str)
+    amazon_ratings['item_id'] = amazon_ratings['item_id'].astype(str)
+    amazon_products['item_id'] = amazon_products['item_id'].astype(str)
+
+    # Convert rating to numeric and timestamp if present
+    if 'rating' in amazon_ratings.columns:
+        amazon_ratings['rating'] = pd.to_numeric(amazon_ratings['rating'], errors='coerce').fillna(0)
+    if 'timestamp' in amazon_ratings.columns:
+        amazon_ratings['timestamp'] = pd.to_datetime(amazon_ratings['timestamp'], errors='coerce')
+
     # Preprocess Amazon data
     amazon_data = loader.preprocess_data(amazon_ratings, amazon_products)
     amazon_stats = loader.get_dataset_stats(amazon_data)

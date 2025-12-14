@@ -38,7 +38,7 @@ data_loader = DataLoader()
 evaluator = RecommenderEvaluator()
 
 # Fallback mock data for when models fail to load
-mock_data = {
+mock_data = {   
     'movies': [
         {"item_id": 1, "title": "The Shawshank Redemption", "genres": "Drama|Crime"},
         {"item_id": 2, "title": "The Godfather", "genres": "Drama|Crime"},

@@ -4,9 +4,7 @@ import "./TagSelector.css";  // Import your custom CSS for buttons
 const TagSelector = ({ categoryType, onTagsChange }) => {
   const movieCategories = [
     "Action", "Adventure", "Comedy", "Drama", "Thriller", "Horror", "Romance",
-    "Science Fiction", "Fantasy", "Mystery", "Crime", "Animation", "Documentary",
-    "Musical", "Biography", "War", "Western", "Historical", "Sports", "Family",
-    "Superhero", "Noir", "Short Film", "Survival", "Experimental"
+    "Science Fiction", "Fantasy", "Mystery", "Crime", 
   ];
 
   const bookCategories = [
@@ -15,8 +13,8 @@ const TagSelector = ({ categoryType, onTagsChange }) => {
   ];
 
   const productCategories = [
-    "Smartphones", "Laptops", "Tablets", "Headphones", "Smartwatches",
-    "Cameras", "Gaming Consoles", "TVs", "Speakers", "Wearables"
+    "Electronics", "Automotive", "Sports and Outdoors", "Toys and Games", "Home and Kitchen",
+    "Beauty", "Musical Instruments"
   ];
 
   const [selectedTags, setSelectedTags] = useState([]);
