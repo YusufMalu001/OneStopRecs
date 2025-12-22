@@ -37,45 +37,177 @@ datasets = {}
 data_loader = DataLoader()
 evaluator = RecommenderEvaluator()
 
-# Fallback mock data for when models fail to load
-mock_data = {   
-    'movies': [
-        {"item_id": 1, "title": "The Shawshank Redemption", "genres": "Drama|Crime"},
-        {"item_id": 2, "title": "The Godfather", "genres": "Drama|Crime"},
-        {"item_id": 3, "title": "The Dark Knight", "genres": "Action|Crime|Drama"},
-        {"item_id": 4, "title": "Pulp Fiction", "genres": "Crime|Drama"},
-        {"item_id": 5, "title": "Forrest Gump", "genres": "Drama|Romance"},
-        {"item_id": 6, "title": "Inception", "genres": "Action|Sci-Fi|Thriller"},
-        {"item_id": 7, "title": "The Matrix", "genres": "Action|Sci-Fi"},
-        {"item_id": 8, "title": "Goodfellas", "genres": "Crime|Drama"},
-        {"item_id": 9, "title": "The Lord of the Rings", "genres": "Adventure|Fantasy"},
-        {"item_id": 10, "title": "Fight Club", "genres": "Drama|Thriller"}
+
+# ---------- REALISTIC MOCK DATA (MATCHING SCREENSHOT CATEGORIES) ----------
+
+# 1. MOVIE DATA POOLS (Matching your UI buttons exactly)
+MOVIES_BY_GENRE = {
+    "Action": [
+        "John Wick", "Mad Max: Fury Road", "Gladiator", "Die Hard", 
+        "The Terminator", "Top Gun: Maverick", "The Dark Knight", "Taken"
     ],
-    'books': [
-        {"item_id": 1, "title": "To Kill a Mockingbird", "authors": "Harper Lee", "genres": "Fiction|Classics"},
-        {"item_id": 2, "title": "1984", "authors": "George Orwell", "genres": "Fiction|Dystopian"},
-        {"item_id": 3, "title": "The Great Gatsby", "authors": "F. Scott Fitzgerald", "genres": "Fiction|Classics"},
-        {"item_id": 4, "title": "Pride and Prejudice", "authors": "Jane Austen", "genres": "Romance|Classics"},
-        {"item_id": 5, "title": "The Catcher in the Rye", "authors": "J.D. Salinger", "genres": "Fiction|Coming-of-age"},
-        {"item_id": 6, "title": "Harry Potter and the Sorcerer's Stone", "authors": "J.K. Rowling", "genres": "Fantasy|Young Adult"},
-        {"item_id": 7, "title": "The Hobbit", "authors": "J.R.R. Tolkien", "genres": "Fantasy|Adventure"},
-        {"item_id": 8, "title": "Lord of the Flies", "authors": "William Golding", "genres": "Fiction|Classics"},
-        {"item_id": 9, "title": "Animal Farm", "authors": "George Orwell", "genres": "Fiction|Political"},
-        {"item_id": 10, "title": "The Alchemist", "authors": "Paulo Coelho", "genres": "Fiction|Philosophy"}
+    "Adventure": [
+        "The Lord of the Rings", "Indiana Jones", "The Revenant", "Life of Pi", 
+        "Into the Wild", "Cast Away", "Uncharted", "The Mummy"
     ],
-    'products': [
-        {"item_id": 1, "title": "Wireless Bluetooth Headphones", "category": "Electronics"},
-        {"item_id": 2, "title": "Coffee Maker", "category": "Home & Kitchen"},
-        {"item_id": 3, "title": "Running Shoes", "category": "Sports & Outdoors"},
-        {"item_id": 4, "title": "Smartphone Case", "category": "Electronics"},
-        {"item_id": 5, "title": "Yoga Mat", "category": "Sports & Outdoors"},
-        {"item_id": 6, "title": "LED Desk Lamp", "category": "Home & Kitchen"},
-        {"item_id": 7, "title": "Water Bottle", "category": "Sports & Outdoors"},
-        {"item_id": 8, "title": "Notebook", "category": "Office Supplies"},
-        {"item_id": 9, "title": "Wireless Mouse", "category": "Electronics"},
-        {"item_id": 10, "title": "Throw Pillow", "category": "Home & Kitchen"}
+    "Comedy": [
+        "Superbad", "The Hangover", "Step Brothers", "Mean Girls", 
+        "Dumb and Dumber", "Anchorman", "Bridesmaids", "Ferris Bueller's Day Off"
+    ],
+    "Drama": [
+        "The Shawshank Redemption", "Forrest Gump", "The Godfather", "Fight Club", 
+        "Good Will Hunting", "A Star Is Born", "Parasite", "Moonlight"
+    ],
+    "Thriller": [
+        "Se7en", "Shutter Island", "Gone Girl", "Prisoners", 
+        "Zodiac", "The Silence of the Lambs", "Black Swan", "Joker"
+    ],
+    "Horror": [
+        "The Conjuring", "It", "Get Out", "Hereditary", 
+        "A Quiet Place", "Halloween", "The Exorcist", "Us"
+    ],
+    "Romance": [
+        "The Notebook", "La La Land", "Pride & Prejudice", "Titanic", 
+        "Before Sunrise", "About Time", "The Fault in Our Stars", "Crazy Rich Asians"
+    ],
+    "Science Fiction": [
+        "Inception", "Interstellar", "The Matrix", "Blade Runner 2049", 
+        "Dune", "Arrival", "Ex Machina", "Star Wars: A New Hope"
+    ],
+    "Fantasy": [
+        "Harry Potter", "Pan's Labyrinth", "The Chronicles of Narnia", "Spirited Away", 
+        "The Wizard of Oz", "How to Train Your Dragon", "Alice in Wonderland"
+    ],
+    "Mystery": [
+        "Knives Out", "Sherlock Holmes", "Memento", "Murder on the Orient Express", 
+        "The Girl with the Dragon Tattoo", "Glass Onion", "Rear Window"
+    ],
+    "Crime": [
+        "Pulp Fiction", "Goodfellas", "The Wolf of Wall Street", "City of God", 
+        "The Departed", "Scarface", "Reservoir Dogs", "Heat"
     ]
 }
+
+# 2. BOOK DATA POOLS
+BOOKS_BY_GENRE = {
+    "Fiction": [
+        "To Kill a Mockingbird", "The Great Gatsby", "Beloved", "The Kite Runner", 
+        "Life of Pi", "The Alchemist", "The Book Thief", "Little Fires Everywhere"
+    ],
+    "Non-Fiction": [
+        "Sapiens", "Educated", "Becoming", "The Diary of a Young Girl", 
+        "Hiroshima", "In Cold Blood", "Into Thin Air", "Born a Crime"
+    ],
+    "Mystery": [
+        "The Da Vinci Code", "Gone Girl", "Big Little Lies", "The Silent Patient", 
+        "And Then There Were None", "The Girl on the Train", "Sharp Objects"
+    ],
+    "Fantasy": [
+        "A Game of Thrones", "The Hobbit", "The Name of the Wind", "Percy Jackson", 
+        "Mistborn", "American Gods", "Circe", "The Way of Kings"
+    ],
+    "Science Fiction": [
+        "1984", "Dune", "Fahrenheit 451", "Ender's Game", 
+        "The Martian", "Ready Player One", "Brave New World", "Neuromancer"
+    ],
+    "Romance": [
+        "Pride and Prejudice", "Me Before You", "Outlander", "The Hating Game", 
+        "It Ends with Us", "Jane Eyre", "Red, White & Royal Blue"
+    ],
+    "Historical": [
+        "The Nightingale", "All the Light We Cannot See", "Wolf Hall", 
+        "The Other Boleyn Girl", "Pillars of the Earth", "War and Peace"
+    ],
+    "Biography": [
+        "Steve Jobs", "Elon Musk", "The Wright Brothers", "Shoe Dog", 
+        "I Am Malala", "A Promised Land", "Alexander Hamilton"
+    ],
+    "Self-Help": [
+        "Atomic Habits", "The Power of Habit", "The Subtle Art of Not Giving a F*ck", 
+        "Deep Work", "Grit", "Mindset", "How to Win Friends and Influence People"
+    ],
+    "Poetry": [
+        "Milk and Honey", "The Sun and Her Flowers", "Leaves of Grass", 
+        "The Odyssey", "Paradise Lost", "Ariel", "The Waste Land"
+    ]
+}
+
+# 3. PRODUCT DATA POOLS
+PRODUCTS_BY_CATEGORY = {
+    "Electronics": [
+        "Wireless Noise Cancelling Headphones", "Smartphone 5G", "4K Ultra HD Smart TV", 
+        "Gaming Laptop", "Bluetooth Speaker", "Digital Camera", "Smartwatch", "Tablet Pro"
+    ],
+    "Automotive": [
+        "Car Vacuum Cleaner", "Dashboard Camera", "Car Seat Organizer", "Microfiber Cleaning Cloths", 
+        "Windshield Sun Shade", "Tire Inflator", "Car Phone Mount", "LED Headlight Bulbs"
+    ],
+    "Sports and Outdoors": [
+        "Yoga Mat", "Dumbbell Set", "Camping Tent", "Hiking Backpack", 
+        "Running Shoes", "Fitness Tracker", "Insulated Water Bottle", "Fishing Rod"
+    ],
+    "Toys and Games": [
+        "LEGO Set", "Board Game Classics", "Remote Control Car", "Action Figure", 
+        "Puzzle 1000 Pieces", "Plush Teddy Bear", "Educational Science Kit", "Drone"
+    ],
+    "Home and Kitchen": [
+        "Air Fryer", "Coffee Maker", "Robot Vacuum", "Blender", 
+        "Memory Foam Pillow", "Non-Stick Cookware Set", "Electric Kettle", "Throw Blanket"
+    ],
+    "Beauty": [
+        "Facial Moisturizer", "Vitamin C Serum", "Hair Dryer", "Makeup Brush Set", 
+        "Exfoliating Scrub", "Sunscreen SPF 50", "Perfume", "Electric Shaver"
+    ],
+    "Musical Instruments": [
+        "Acoustic Guitar", "Electric Keyboard", "Ukulele", "Drum Set", 
+        "Violin", "Microphone Stand", "Guitar Tuner", "Harmonica"
+    ]
+}
+
+# 4. GENERATE MOCK DATA STRUCTURE
+mock_data = {
+    "movies": [],
+    "books": [],
+    "products": []
+}
+
+# Helper to populate lists
+def populate_dataset(source_dict, target_list, id_start, type_label):
+    current_id = id_start
+    # First pass: add all real items
+    for category, titles in source_dict.items():
+        for title in titles:
+            item = {
+                "item_id": current_id,
+                "title": title,
+            }
+            # Handle different field names for categories
+            if type_label == "movie":
+                item["genres"] = category  # Assign the exact category name as genre
+            elif type_label == "book":
+                item["genres"] = category
+                item["authors"] = "Best Selling Author"
+            elif type_label == "product":
+                item["category"] = category
+            
+            target_list.append(item)
+            current_id += 1
+
+    # Second pass: Fill to 500 items if necessary by duplicating with "Vol. 2" etc
+    original_items = list(target_list) # Copy of the real items
+    while len(target_list) < 500:
+        base_item = original_items[len(target_list) % len(original_items)]
+        new_item = base_item.copy()
+        new_item["item_id"] = current_id
+        new_item["title"] = f"{base_item['title']} (Special Edition)"
+        target_list.append(new_item)
+        current_id += 1
+
+# Execute generation
+populate_dataset(MOVIES_BY_GENRE, mock_data["movies"], 1, "movie")
+populate_dataset(BOOKS_BY_GENRE, mock_data["books"], 1, "book")
+populate_dataset(PRODUCTS_BY_CATEGORY, mock_data["products"], 1, "product")
+
 
 def get_fallback_recommendations(dataset, user_id, n_recommendations=10, categories=None):
     """Return fallback mock recommendations when model fails"""
@@ -89,42 +221,53 @@ def get_fallback_recommendations(dataset, user_id, n_recommendations=10, categor
         'goodbooks': 'books',
         'products': 'products',
         'amazon': 'products',
-        'songs': 'products'  # Use products as fallback for songs
+        'songs': 'products'
     }
 
-    mock_key = dataset_mapping.get(dataset, 'movies')  # Default to movies
+    mock_key = dataset_mapping.get(dataset, 'movies')
     mock_items = mock_data.get(mock_key, mock_data['movies'])
 
-    # Filter by categories if provided
-    if categories:
+    # 1. Strict Filtering
+    if categories and len(categories) > 0:
         filtered_items = []
         for item in mock_items:
-            item_categories = []
-            if 'genres' in item and isinstance(item['genres'], str):
-                item_categories = [g.strip() for g in item['genres'].split('|')]
-            elif 'category' in item and item['category']:
-                item_categories = [str(item['category'])]
-
-            if any(cat in item_categories for cat in categories):
+            # Check for genre/category match
+            item_cats = []
+            if 'genres' in item:
+                # Handle "Action|Thriller" vs "Action"
+                item_cats = [g.strip() for g in item['genres'].split('|')]
+            elif 'category' in item:
+                item_cats = [str(item['category'])]
+            
+            # If the item matches ANY of the requested categories, keep it
+            if any(cat in item_cats for cat in categories):
                 filtered_items.append(item)
-
-        if not filtered_items:
-            filtered_items = mock_items
+        
+        # If we found matches, use ONLY those. 
+        # If no matches found (rare with mock data), fall back to all items.
+        if filtered_items:
+            candidate_pool = filtered_items
+        else:
+            candidate_pool = mock_items
     else:
-        filtered_items = mock_items
+        # No categories requested? Use everything.
+        candidate_pool = mock_items
 
-    recommendations = random.sample(filtered_items, min(n_recommendations, len(filtered_items)))
+    # 2. Randomize Selection from the filtered pool
+    # Ensure we don't try to sample more items than exist
+    sample_size = min(n_recommendations, len(candidate_pool))
+    recommendations = random.sample(candidate_pool, sample_size)
 
     result = []
     for item in recommendations:
         result.append({
-            'item_id': int(item['item_id']),  # Ensure int type for JSON serialization
+            'item_id': int(item['item_id']),
             'predicted_rating': round(random.uniform(3.5, 5.0), 2),
             'item_info': item
         })
 
     return {
-        'user_id': int(user_id),  # Ensure int type for JSON serialization
+        'user_id': int(user_id),
         'model': 'fallback',
         'dataset': dataset,
         'categories': categories or [],
@@ -304,11 +447,12 @@ def get_items(dataset):
         'total': len(items)
     })
 
-@app.route('/api/recommend/<dataset>/<model_name>')
-def get_recommendations(dataset, model_name):
-    """Get recommendations for a user"""
+@app.route('/api/recommend-by-categories/<dataset>/<model_name>')
+def get_recommendations_by_categories(dataset, model_name):
+    """Get recommendations filtered by categories"""
     # Get parameters
     user_id = request.args.get('user_id', type=int)
+    categories = request.args.getlist('categories')
     n_recommendations = request.args.get('n', 10, type=int)
 
     if user_id is None:
@@ -318,56 +462,111 @@ def get_recommendations(dataset, model_name):
     try:
         if dataset not in models or model_name not in models[dataset]:
             print(f"Model {model_name} for {dataset} not found, using fallback")
-            return jsonify(get_fallback_recommendations(dataset, user_id, n_recommendations))
+            return jsonify(get_fallback_recommendations(dataset, user_id, n_recommendations, categories=categories))
 
         model = models[dataset][model_name]
         data = datasets[dataset]['data']
+        items = datasets[dataset]['items']
 
         # Convert user_id to user_idx
         if user_id not in data['user_to_idx']:
-            print(f"User {user_id} not found, using fallback")
-            return jsonify(get_fallback_recommendations(dataset, user_id, n_recommendations))
+            # Try to use a random user that exists
+            available_users = list(data['user_to_idx'].keys())
+            if available_users:
+                user_id = available_users[0]
+                user_idx = data['user_to_idx'][user_id]
+                print(f"User not found, using user {user_id} instead")
+            else:
+                print("No users available, using fallback")
+                return jsonify(get_fallback_recommendations(dataset, user_id, n_recommendations, categories=categories))
+        else:
+            user_idx = data['user_to_idx'][user_id]
 
-        user_idx = data['user_to_idx'][user_id]
+        # Get all recommendations
+        try:
+            all_recommendations = model.recommend(user_idx, n_recommendations * 5)  # Get more to filter
+        except Exception as e:
+            print(f"Error getting recommendations: {e}, using fallback")
+            return jsonify(get_fallback_recommendations(dataset, user_id, n_recommendations, categories=categories))
 
-        # Get recommendations
-        recommendations = model.recommend(user_idx, n_recommendations)
+        # Filter by categories if provided
+        if categories:
+            filtered_recommendations = []
+            for item_idx, predicted_rating in all_recommendations:
+                try:
+                    item_id = data['idx_to_item'][item_idx]
+                    item_info = items[items['item_id'] == item_id]
 
-        # Convert item indices back to item IDs and get item details
-        items = datasets[dataset]['items']
+                    if len(item_info) == 0:
+                        continue
+
+                    item_info = item_info.iloc[0]
+
+                    # Check if item matches any of the selected categories
+                    item_categories = []
+                    if 'genres' in item_info and isinstance(item_info['genres'], str):
+                        item_categories = [g.strip() for g in item_info['genres'].split('|')]
+                    elif 'category' in item_info and pd.notna(item_info['category']):
+                        item_categories = [str(item_info['category'])]
+
+                    # If no categories match, include the item anyway (fallback)
+                    if not item_categories or any(cat in item_categories for cat in categories):
+                        filtered_recommendations.append((item_idx, predicted_rating))
+                        if len(filtered_recommendations) >= n_recommendations:
+                            break
+                except Exception as e:
+                    print(f"Error processing item {item_idx}: {e}")
+                    continue
+        else:
+            filtered_recommendations = all_recommendations[:n_recommendations]
+
+        # If no filtered recommendations, use all recommendations
+        if not filtered_recommendations:
+            filtered_recommendations = all_recommendations[:n_recommendations]
+
+        # Convert to result format
         result = []
+        for item_idx, predicted_rating in filtered_recommendations:
+            try:
+                # Convert numpy types to Python types for JSON serialization
+                item_idx_int = int(item_idx)
+                item_id = data['idx_to_item'][item_idx_int]
+                item_info = items[items['item_id'] == item_id]
 
-        for item_idx, predicted_rating in recommendations:
-            # Convert numpy types to Python types for JSON serialization
-            item_idx_int = int(item_idx)
-            item_id = data['idx_to_item'][item_idx_int]
-            item_info = items[items['item_id'] == item_id].iloc[0].to_dict()
+                if len(item_info) == 0:
+                    continue
 
-            # Convert any numpy types in item_info to Python types
-            for key, value in item_info.items():
-                if hasattr(value, 'item'):  # numpy scalar
-                    item_info[key] = value.item()
-                elif isinstance(value, np.integer):
-                    item_info[key] = int(value)
-                elif isinstance(value, np.floating):
-                    item_info[key] = float(value)
+                item_info = item_info.iloc[0].to_dict()
 
-            result.append({
-                'item_id': int(item_id),  # Ensure int type
-                'predicted_rating': float(predicted_rating),
-                'item_info': item_info
-            })
+                # Convert any numpy types in item_info to Python types
+                for key, value in item_info.items():
+                    if hasattr(value, 'item'):  # numpy scalar
+                        item_info[key] = value.item()
+                    elif isinstance(value, np.integer):
+                        item_info[key] = int(value)
+                    elif isinstance(value, np.floating):
+                        item_info[key] = float(value)
+
+                result.append({
+                    'item_id': int(item_id),  # Ensure int type
+                    'predicted_rating': float(predicted_rating),
+                    'item_info': item_info
+                })
+            except Exception as e:
+                print(f"Error converting item {item_idx}: {e}")
+                continue
 
         return jsonify({
             'user_id': user_id,
             'model': model_name,
             'dataset': dataset,
+            'categories': categories,
             'recommendations': result
         })
 
     except Exception as e:
-        print(f"Error getting recommendations: {e}, using fallback")
-        return jsonify(get_fallback_recommendations(dataset, user_id, n_recommendations))
+        print(f"Error getting category recommendations: {e}, using fallback")
+        return jsonify(get_fallback_recommendations(dataset, user_id, n_recommendations, categories=categories))
 
 @app.route('/api/predict/<dataset>/<model_name>')
 def predict_rating(dataset, model_name):
@@ -469,127 +668,6 @@ def get_categories(dataset):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/api/recommend-by-categories/<dataset>/<model_name>')
-def get_recommendations_by_categories(dataset, model_name):
-    """Get recommendations filtered by categories"""
-    # Get parameters
-    user_id = request.args.get('user_id', type=int)
-    categories = request.args.getlist('categories')
-    n_recommendations = request.args.get('n', 10, type=int)
-
-    if user_id is None:
-        return jsonify({'error': 'user_id parameter required'}), 400
-
-    # Try to get recommendations from model, fallback to mock data if fails
-    try:
-        if dataset not in models or model_name not in models[dataset]:
-            print(f"Model {model_name} for {dataset} not found, using fallback")
-            return jsonify(get_fallback_recommendations(dataset, user_id, n_recommendations))
-
-        model = models[dataset][model_name]
-        data = datasets[dataset]['data']
-        items = datasets[dataset]['items']
-
-        # Convert user_id to user_idx
-        if user_id not in data['user_to_idx']:
-            # Try to use a random user that exists
-            available_users = list(data['user_to_idx'].keys())
-            if available_users:
-                user_id = available_users[0]
-                user_idx = data['user_to_idx'][user_id]
-                print(f"User not found, using user {user_id} instead")
-            else:
-                print("No users available, using fallback")
-                return jsonify(get_fallback_recommendations(dataset, user_id, n_recommendations))
-        else:
-            user_idx = data['user_to_idx'][user_id]
-
-        # Get all recommendations
-        try:
-            all_recommendations = model.recommend(user_idx, n_recommendations * 5)  # Get more to filter
-        except Exception as e:
-            print(f"Error getting recommendations: {e}, using fallback")
-            return jsonify(get_fallback_recommendations(dataset, user_id, n_recommendations))
-
-        # Filter by categories if provided
-        if categories:
-            filtered_recommendations = []
-            for item_idx, predicted_rating in all_recommendations:
-                try:
-                    item_id = data['idx_to_item'][item_idx]
-                    item_info = items[items['item_id'] == item_id]
-
-                    if len(item_info) == 0:
-                        continue
-
-                    item_info = item_info.iloc[0]
-
-                    # Check if item matches any of the selected categories
-                    item_categories = []
-                    if 'genres' in item_info and isinstance(item_info['genres'], str):
-                        item_categories = [g.strip() for g in item_info['genres'].split('|')]
-                    elif 'category' in item_info and pd.notna(item_info['category']):
-                        item_categories = [str(item_info['category'])]
-
-                    # If no categories match, include the item anyway (fallback)
-                    if not item_categories or any(cat in item_categories for cat in categories):
-                        filtered_recommendations.append((item_idx, predicted_rating))
-                        if len(filtered_recommendations) >= n_recommendations:
-                            break
-                except Exception as e:
-                    print(f"Error processing item {item_idx}: {e}")
-                    continue
-        else:
-            filtered_recommendations = all_recommendations[:n_recommendations]
-
-        # If no filtered recommendations, use all recommendations
-        if not filtered_recommendations:
-            filtered_recommendations = all_recommendations[:n_recommendations]
-
-        # Convert to result format
-        result = []
-        for item_idx, predicted_rating in filtered_recommendations:
-            try:
-                # Convert numpy types to Python types for JSON serialization
-                item_idx_int = int(item_idx)
-                item_id = data['idx_to_item'][item_idx_int]
-                item_info = items[items['item_id'] == item_id]
-
-                if len(item_info) == 0:
-                    continue
-
-                item_info = item_info.iloc[0].to_dict()
-
-                # Convert any numpy types in item_info to Python types
-                for key, value in item_info.items():
-                    if hasattr(value, 'item'):  # numpy scalar
-                        item_info[key] = value.item()
-                    elif isinstance(value, np.integer):
-                        item_info[key] = int(value)
-                    elif isinstance(value, np.floating):
-                        item_info[key] = float(value)
-
-                result.append({
-                    'item_id': int(item_id),  # Ensure int type
-                    'predicted_rating': float(predicted_rating),
-                    'item_info': item_info
-                })
-            except Exception as e:
-                print(f"Error converting item {item_idx}: {e}")
-                continue
-
-        return jsonify({
-            'user_id': user_id,
-            'model': model_name,
-            'dataset': dataset,
-            'categories': categories,
-            'recommendations': result
-        })
-
-    except Exception as e:
-        print(f"Error getting category recommendations: {e}, using fallback")
-        return jsonify(get_fallback_recommendations(dataset, user_id, n_recommendations))
-
 @app.route('/api/model-info/<dataset>/<model_name>')
 def get_model_info(dataset, model_name):
     """Get information about a specific model"""
@@ -615,4 +693,3 @@ if __name__ == '__main__':
     print("All models loaded successfully!")
     print("Starting Flask server on http://localhost:5000")
     app.run(debug=True, host='0.0.0.0', port=5000)
-
